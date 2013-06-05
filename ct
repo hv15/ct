@@ -1,4 +1,19 @@
 #!/usr/bin/env ruby
+# ct - count files and directories
+# Copyright (C) 2013 Hans-Nikolai Viessmann
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 require 'getoptlong'
 
 VERSION = 0.4
@@ -76,6 +91,9 @@ opts.each do |opt, arg|
 	case opt
 	when '--help'
 		puts <<-EOF
+ct Copyright (C) 2013 Hans-Nikolai Viessmann
+This program comes with ABSOLUTELY NO WARRANTY!
+
 Usage: ct [OPTION] ... DIR
 
 DESCRIPTION: Count the number of files and directories within DIR
