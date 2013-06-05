@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+require 'getoptlong'
+require 'pathname'
+
+VERSION = 0.2
+
+def all_count(path)
+	path.children.count
+end
+
+def dir_count(path)
+	count = path.children.count{|obj| obj.directory?}
+	return dir_rec_count(path, count) if $rec and count > 0
+	count
+end
+
+def fil_count(path)
+	path.children.count{|obj| obj.file?}
+end
+
+def dir_rec_count(path, count)
+	path.children.select{|obj| obj.directory?}.each do |dir|
+		count += dir_count(dir)
+	end
+	count
+end
+
+def count(path, type)
+	case type
+		when 0
+			all_count(Pathname.new(path).realpath)
+		when 1
+			fil_count(Pathname.new(path).realpath)
+		when 2
+			dir_count(Pathname.new(path).realpath)
+	end
+end
+
+opts = GetoptLong.new(
+	['--help', '-h', GetoptLong::NO_ARGUMENT],
+	['--recursive', '-r', GetoptLong::NO_ARGUMENT],
+	['--verbose', '-v', GetoptLong::NO_ARGUMENT],
+	['--files', GetoptLong::NO_ARGUMENT],
+	['--dirs', GetoptLong::NO_ARGUMENT],
+	['--version', '-V', GetoptLong::NO_ARGUMENT]
+)
+
+$rec = false
+$ver = false
+cho = 0
+
+opts.each do |opt, arg|
+	case opt
+	when '--help'
+		puts <<-EOF
+Usage: ct [OPTION] ... DIR
+
+OPTIONS:
+  -h, --help		show this message
+  -v, --verbose		verbose
+  -r, --recursive	recursively count directories
+  --files		return only file count
+  --dirs		return only directory count
+  -V, --version		print version
+		EOF
+		exit 0
+	when '--recursive'
+		$rec = true
+	when '--verbose'
+		$ver = true
+	when '--files'
+		cho = 1
+	when '--dirs'
+		cho = 2
+	when '--version'
+		puts "ct #{VERSION}"
+		exit 0
+	end
+end
+
+if ARGV.length != 1
+	puts "No arguments given. Try '--help' for options."
+	exit 125
+end
+
+puts count(ARGV.shift, cho)
