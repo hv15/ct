@@ -19,6 +19,10 @@ def fil_count
 	(Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.file?(obj)}
 end
 
+def sym_count
+	(Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.symlink?(obj)}
+end
+
 def dir_rec_count(count)
 	(Dir.glob("{*,.*}") - [".",".."]).select{|obj| File.directory?(obj) and not File.symlink?(obj)}.each do |dir|
 		Dir.chdir(dir) do
@@ -48,6 +52,8 @@ def count(path, type)
 				fil_count
 			when 2
 				dir_count
+			when 3
+				sym_count
 		end
 	end
 end
@@ -58,6 +64,7 @@ opts = GetoptLong.new(
 	['--verbose', '-v', GetoptLong::NO_ARGUMENT],
 	['--files', GetoptLong::NO_ARGUMENT],
 	['--dirs', GetoptLong::NO_ARGUMENT],
+	['--syms', GetoptLong::NO_ARGUMENT],
 	['--version', '-V', GetoptLong::NO_ARGUMENT]
 )
 
@@ -71,13 +78,19 @@ opts.each do |opt, arg|
 		puts <<-EOF
 Usage: ct [OPTION] ... DIR
 
+DESCRIPTION: Count the number of files and directories within DIR
+
 OPTIONS:
   -h, --help		show this message
   -v, --verbose		verbose
   -r, --recursive	recursively count directories
   --files		return only file count
   --dirs		return only directory count
+  --syms		return only symbolic link count
   -V, --version		print version
+
+TESTED ON:
+	Arch Linux x86_64
 		EOF
 		exit 0
 	when '--recursive'
@@ -88,6 +101,8 @@ OPTIONS:
 		cho = 1
 	when '--dirs'
 		cho = 2
+	when '--syms'
+		cho = 3
 	when '--version'
 		puts "ct #{VERSION}"
 		exit 0
