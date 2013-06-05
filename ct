@@ -1,38 +1,54 @@
 #!/usr/bin/env ruby
 require 'getoptlong'
-require 'pathname'
 
-VERSION = 0.2
+VERSION = 0.4
 
-def all_count(path)
-	path.children.count
-end
-
-def dir_count(path)
-	count = path.children.count{|obj| obj.directory?}
-	return dir_rec_count(path, count) if $rec and count > 0
+def all_count
+	count = (Dir.glob("{*,.*}") - [".",".."]).length
+	return all_rec_count(count) if $rec and count > 0
 	count
 end
 
-def fil_count(path)
-	path.children.count{|obj| obj.file?}
+def dir_count
+	count = (Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.directory?(obj) and not File.symlink?(obj)}
+	return dir_rec_count(count) if $rec and count > 0
+	count
 end
 
-def dir_rec_count(path, count)
-	path.children.select{|obj| obj.directory?}.each do |dir|
-		count += dir_count(dir)
+def fil_count
+	(Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.file?(obj)}
+end
+
+def dir_rec_count(count)
+	(Dir.glob("{*,.*}") - [".",".."]).select{|obj| File.directory?(obj) and not File.symlink?(obj)}.each do |dir|
+		Dir.chdir(dir) do
+			count += dir_count
+		end
+	end
+	count
+end
+
+def all_rec_count(count)
+	(Dir.glob("{*,.*}") - [".",".."]).each do |objs|
+		if File.directory?(objs) and not File.symlink?(objs)
+			Dir.chdir(objs) do
+				count += all_count
+			end
+		end
 	end
 	count
 end
 
 def count(path, type)
-	case type
-		when 0
-			all_count(Pathname.new(path).realpath)
-		when 1
-			fil_count(Pathname.new(path).realpath)
-		when 2
-			dir_count(Pathname.new(path).realpath)
+	Dir.chdir(path) do
+		case type
+			when 0
+				all_count
+			when 1
+				fil_count
+			when 2
+				dir_count
+		end
 	end
 end
 
@@ -83,4 +99,11 @@ if ARGV.length != 1
 	exit 125
 end
 
-puts count(ARGV.shift, cho)
+path = ARGV.shift
+
+if not File.directory?(path)
+	puts "Invalid path given -- #{path}"
+	exit 100
+end
+
+puts count(File.realdirpath(path), cho)
