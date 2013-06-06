@@ -16,30 +16,40 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 require 'getoptlong'
 
-VERSION = 0.4
+VERSION = 0.5
 
 def all_count
-	count = (Dir.glob("{*,.*}") - [".",".."]).length
+	list = Dir.glob("{*,.*}") - [".",".."]
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	count = list.length
 	return all_rec_count(count) if $rec and count > 0
 	count
 end
 
 def dir_count
-	count = (Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.directory?(obj) and not File.symlink?(obj)}
+	list = Dir.glob("{*,.*}") - [".",".."]
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	count = list.count{|obj| File.directory?(obj) and not File.symlink?(obj)}
 	return dir_rec_count(count) if $rec and count > 0
 	count
 end
 
 def fil_count
-	(Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.file?(obj)}
+	list = Dir.glob("{*,.*}") - [".",".."]
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	list.count{|obj| File.file?(obj)}
 end
 
 def sym_count
-	(Dir.glob("{*,.*}") - [".",".."]).count{|obj| File.symlink?(obj)}
+	list = Dir.glob("{*,.*}") - [".",".."]
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	list.count{|obj| File.symlink?(obj)}
 end
 
 def dir_rec_count(count)
-	(Dir.glob("{*,.*}") - [".",".."]).select{|obj| File.directory?(obj) and not File.symlink?(obj)}.each do |dir|
+	list = Dir.glob("{*,.*}") - [".",".."]
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	list.select{|obj| File.directory?(obj) and not File.symlink?(obj)}.each do |dir|
 		Dir.chdir(dir) do
 			count += dir_count
 		end
@@ -48,7 +58,8 @@ def dir_rec_count(count)
 end
 
 def all_rec_count(count)
-	(Dir.glob("{*,.*}") - [".",".."]).each do |objs|
+	list = Dir.glob("{*,.*}") - [".",".."]
+	list.each do |objs|
 		if File.directory?(objs) and not File.symlink?(objs)
 			Dir.chdir(objs) do
 				count += all_count
@@ -139,4 +150,8 @@ if not File.directory?(path)
 	exit 100
 end
 
-puts count(File.realdirpath(path), cho)
+path = File.realdirpath(path)
+
+puts "GO - #{path}" if $ver
+
+puts count(path, cho)
