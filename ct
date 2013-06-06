@@ -14,41 +14,41 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-require 'getoptlong'
+require './trollop'
 
-VERSION = 0.5
+VERSION = 0.5-1
 
 def all_count
 	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
 	count = list.length
-	return all_rec_count(count) if $rec and count > 0
+	return all_rec_count(count) if $opts[:recursive] and count > 0
 	count
 end
 
 def dir_count
 	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
 	count = list.count{|obj| File.directory?(obj) and not File.symlink?(obj)}
-	return dir_rec_count(count) if $rec and count > 0
+	return dir_rec_count(count) if $opts[:recursive] and count > 0
 	count
 end
 
 def fil_count
 	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
 	list.count{|obj| File.file?(obj)}
 end
 
 def sym_count
 	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
 	list.count{|obj| File.symlink?(obj)}
 end
 
 def dir_rec_count(count)
 	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $ver
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
 	list.select{|obj| File.directory?(obj) and not File.symlink?(obj)}.each do |dir|
 		Dir.chdir(dir) do
 			count += dir_count
@@ -59,6 +59,7 @@ end
 
 def all_rec_count(count)
 	list = Dir.glob("{*,.*}") - [".",".."]
+	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
 	list.each do |objs|
 		if File.directory?(objs) and not File.symlink?(objs)
 			Dir.chdir(objs) do
@@ -69,73 +70,40 @@ def all_rec_count(count)
 	count
 end
 
-def count(path, type)
+def count(path)
 	Dir.chdir(path) do
-		case type
-			when 0
-				all_count
-			when 1
-				fil_count
-			when 2
-				dir_count
-			when 3
-				sym_count
+		if $opts.values_at(:files, :dirs, :syms).all? or $opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
+			all_count
+		elsif $opts[:files]
+			fil_count
+		elsif $opts[:dirs]
+			dir_count
+		elsif $opts[:syms]
+			sym_count
+		else
+			puts "No Match"
+			exit 95
 		end
 	end
 end
 
-opts = GetoptLong.new(
-	['--help', '-h', GetoptLong::NO_ARGUMENT],
-	['--recursive', '-r', GetoptLong::NO_ARGUMENT],
-	['--verbose', '-v', GetoptLong::NO_ARGUMENT],
-	['--files', GetoptLong::NO_ARGUMENT],
-	['--dirs', GetoptLong::NO_ARGUMENT],
-	['--syms', GetoptLong::NO_ARGUMENT],
-	['--version', '-V', GetoptLong::NO_ARGUMENT]
-)
-
-$rec = false
-$ver = false
-cho = 0
-
-opts.each do |opt, arg|
-	case opt
-	when '--help'
-		puts <<-EOF
-ct Copyright (C) 2013 Hans-Nikolai Viessmann
+$opts = Trollop::options do
+	version "ct #{VERSION} (c) 2013 Hans-Nikolai Viessmann"
+	text <<-EOF
+ct Copyright (c) 2013 Hans-Nikolai Viessmann
 This program comes with ABSOLUTELY NO WARRANTY!
 
-Usage: ct [OPTION] ... DIR
+Usage: ct [OPTIONS] ... DIR
 
 DESCRIPTION: Count the number of files and directories within DIR
 
 OPTIONS:
-  -h, --help		show this message
-  -v, --verbose		verbose
-  -r, --recursive	recursively count directories
-  --files		return only file count
-  --dirs		return only directory count
-  --syms		return only symbolic link count
-  -V, --version		print version
-
-TESTED ON:
-	Arch Linux x86_64
-		EOF
-		exit 0
-	when '--recursive'
-		$rec = true
-	when '--verbose'
-		$ver = true
-	when '--files'
-		cho = 1
-	when '--dirs'
-		cho = 2
-	when '--syms'
-		cho = 3
-	when '--version'
-		puts "ct #{VERSION}"
-		exit 0
-	end
+EOF
+	opt :files, "Return only file count" 
+	opt :dirs, "Return only directory count"
+	opt :syms, "Return only symbolic link count"
+	opt :recursive, "Recursively count"
+	opt :verbose, "Show more detail"
 end
 
 if ARGV.length != 1
@@ -152,6 +120,6 @@ end
 
 path = File.realdirpath(path)
 
-puts "GO - #{path}" if $ver
+puts "GO - #{path}" if $opts[:verbose]
 
-puts count(path, cho)
+puts count(path)
