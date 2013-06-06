@@ -16,74 +16,75 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 require './trollop'
 
-VERSION = 0.5-1
+VERSION = 0.5-2
 
-def all_count
-	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
+def all_count(path)
+	list = Dir.entries(path) - [".",".."]
+	puts "IN - #{path}", "---= #{list}" if $opts[:verbose]
 	count = list.length
-	return all_rec_count(count) if $opts[:recursive] and count > 0
+	return all_rec_count(path, list, count) if $opts[:recursive] and count > 0
 	count
 end
 
-def dir_count
-	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
-	count = list.count{|obj| File.directory?(obj) and not File.symlink?(obj)}
-	return dir_rec_count(count) if $opts[:recursive] and count > 0
-	count
-end
-
-def fil_count
-	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
-	list.count{|obj| File.file?(obj)}
-end
-
-def sym_count
-	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
-	list.count{|obj| File.symlink?(obj)}
-end
-
-def dir_rec_count(count)
-	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
-	list.select{|obj| File.directory?(obj) and not File.symlink?(obj)}.each do |dir|
-		Dir.chdir(dir) do
-			count += dir_count
+def all_rec_count(path, list, count)
+	list.each{|obj|
+		obj = File.realpath(obj, path)
+		if File.directory?(obj) and not File.symlink?(obj)
+			count += all_count(obj)
 		end
-	end
+	}
 	count
 end
 
-def all_rec_count(count)
-	list = Dir.glob("{*,.*}") - [".",".."]
-	puts "IN - #{Dir.pwd}", "---> #{list}" if $opts[:verbose]
-	list.each do |objs|
-		if File.directory?(objs) and not File.symlink?(objs)
-			Dir.chdir(objs) do
-				count += all_count
-			end
-		end
-	end
+def dir_count(path)
+	list = (Dir.entries(path) - [".",".."]).select{|obj|
+		obj = File.realpath(obj, path)
+		File.directory?(obj) and not File.symlink?(obj)
+	}
+	puts "IN - #{path}", "---> #{list}" if $opts[:verbose]
+	count = list.length
+	return dir_rec_count(path, list, count) if $opts[:recursive] and count > 0
 	count
+end
+
+def dir_rec_count(path, list, count)
+	list.each{|dir|
+		dir = File.realdirpath(dir, path)
+		count += dir_count(dir)
+	}
+	count
+end
+
+def fil_count(path)
+	list = (Dir.entries(path) - [".",".."]).select{|obj|
+		obj = File.realpath(obj, path)
+		File.file?(obj)
+	}
+	puts "IN - #{path}", "---> #{list}" if $opts[:verbose]
+	list.count
+end
+
+def sym_count(path)
+	list = (Dir.entries(path) - [".",".."]).select{|obj|
+		obj = File.realpath(obj, path)
+		File.symlink?(obj)
+	}
+	puts "IN - #{path}", "---> #{list}" if $opts[:verbose]
+	list.count
 end
 
 def count(path)
-	Dir.chdir(path) do
-		if $opts.values_at(:files, :dirs, :syms).all? or $opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
-			all_count
-		elsif $opts[:files]
-			fil_count
-		elsif $opts[:dirs]
-			dir_count
-		elsif $opts[:syms]
-			sym_count
-		else
-			puts "No Match"
-			exit 95
-		end
+	if $opts.values_at(:files, :dirs, :syms).all? or $opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
+		all_count(path)
+	elsif $opts[:files]
+		fil_count(path)
+	elsif $opts[:dirs]
+		dir_count(path)
+	elsif $opts[:syms]
+		sym_count(path)
+	else
+		puts "No Match"
+		exit 95
 	end
 end
 
@@ -119,7 +120,5 @@ if not File.directory?(path)
 end
 
 path = File.realdirpath(path)
-
-puts "GO - #{path}" if $opts[:verbose]
 
 puts count(path)
