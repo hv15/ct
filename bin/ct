@@ -1,26 +1,10 @@
 #!/usr/bin/env ruby
 # Bundler Boilerplate
-require 'rubygems'
 require 'bundler/setup'
 require_relative '../lib/ct'
 require 'trollop'
 
-def count(path)
-	if $opts.values_at(:files, :dirs, :syms).all? or $opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
-		Ct.all_count(path)
-	elsif $opts[:files]
-		Ct.fil_count(path)
-	elsif $opts[:dirs]
-		Ct.dir_count(path)
-	elsif $opts[:syms]
-		Ct.sym_count(path)
-	else
-		puts "No Match"
-		exit 95
-	end
-end
-
-$opts = Trollop::options do
+opts = Trollop::options do
 	version "ct #{Ct::VERSION} (c) 2013 Hans-Nikolai Viessmann"
 	text <<-EOF
 ct Copyright (c) 2013 Hans-Nikolai Viessmann
@@ -53,4 +37,6 @@ end
 
 path = File.absolute_path(path)
 
-puts count(path) if __FILE__ == $0
+ct = Ct.new(path, opts)
+
+puts ct.count

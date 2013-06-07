@@ -19,36 +19,53 @@
 class Ct
 	VERSION = '0.5.4'
 
-	def self.all_count(path)
+	def initialize(path, opts)
+		@opts = opts
+		@path = path
+	end
+
+	def count
+		if @opts.values_at(:files, :dirs, :syms).all? or @opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
+			all_count(@path)
+		elsif @opts[:files]
+			fil_count(@path)
+		elsif @opts[:dirs]
+			dir_count(@path)
+		elsif @opts[:syms]
+			sym_count(@path)
+		end
+	end
+
+	def all_count(path)
 		list = Dir.entries(path) - [".",".."]
-		puts "IN - #{path}", "---= #{list}" if $opts[:verbose]
+		puts "IN - #{path}", "---= #{list}" if @opts[:verbose]
 		count = list.length
-		return all_rec_count(path, list, count) if $opts[:recursive] and count > 0
+		return all_rec_count(path, list, count) if @opts[:recursive] and count > 0
 		count
 	end
 
-	def self.all_rec_count(path, list, count)
+	def all_rec_count(path, list, count)
 		list.each{|obj|
 			obj = File.absolute_path(obj, path)
-			if File.directory?(obj) and not $opts[:syms] ? false : File.symlink?(obj)
+			if File.directory?(obj) and not @opts[:syms] ? false : File.symlink?(obj)
 				count += all_count(obj)
 			end
 		}
 		count
 	end
 
-	def self.dir_count(path)
+	def dir_count(path)
 		list = (Dir.entries(path) - [".",".."]).select{|obj|
 			obj = File.absolute_path(obj, path)
-			File.directory?(obj) and not $opts[:syms] ? false : File.symlink?(obj)
+			File.directory?(obj) and not @opts[:syms] ? false : File.symlink?(obj)
 		}
-		puts "IN - #{path}", "---> #{list}" if $opts[:verbose]
+		puts "IN - #{path}", "---> #{list}" if @opts[:verbose]
 		count = list.length
-		return dir_rec_count(path, list, count) if $opts[:recursive] and count > 0
+		return dir_rec_count(path, list, count) if @opts[:recursive] and count > 0
 		count
 	end
 
-	def self.dir_rec_count(path, list, count)
+	def dir_rec_count(path, list, count)
 		list.each{|dir|
 			dir = File.absolute_path(dir, path)
 			count += dir_count(dir)
@@ -56,27 +73,27 @@ class Ct
 		count
 	end
 
-	def self.fil_count(path)
+	def fil_count(path)
 		list = (Dir.entries(path) - [".",".."]).select{|obj|
 			obj = File.absolute_path(obj, path)
 			File.file?(obj)
 		}
-		puts "IN - #{path}", "---> #{list}" if $opts[:verbose]
+		puts "IN - #{path}", "---> #{list}" if @opts[:verbose]
 		list.length
 	end
 
-	def self.sym_count(path)
+	def sym_count(path)
 		list = (Dir.entries(path) - [".",".."]).select{|obj|
 			obj = File.absolute_path(obj, path)
 			File.symlink?(obj)
 		}
-		puts "IN - #{path}", "---> #{list}" if $opts[:verbose]
+		puts "IN - #{path}", "---> #{list}" if @opts[:verbose]
 		count = list.length
-	#	return sym_rec_count(path, list, count) if $opts[:recursive]
+	#	return sym_rec_count(path, list, count) if @opts[:recursive]
 		count
 	end
 
-	def self.sym_rec_count(path, list, count)
+	def sym_rec_count(path, list, count)
 		list.each{|obj|
 			obj = File.absolute_path(obj, path)
 			if File.directory?(obj)
