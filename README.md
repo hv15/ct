@@ -32,7 +32,7 @@ versions:
     Arch Linux x86_64 -- ruby 2.0.0p195 (2013-05-14 revision 40734)
 
 However, I am not using any OS specific features to do the counting, so **ct**
-should be usuable on any system the supports Ruby.
+should be usuable on any system that supports Ruby.
 
 Build
 -----
