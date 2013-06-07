@@ -24,13 +24,23 @@ class Ct
 		@path = path
 	end
 
+=begin
+ The aurguments are being processed by Trollop into a hash...as individual true/false variables.
+
+ if no option given 	-> count all
+ if --sym given 	-> count for syms
+ if --files given 	-> count for files
+ if --dires given 	-> count for directories, except those that are syms
+ if --dirs and --syms	-> count for directories and those that are syms
+ if --dirs, --files, --syms -> like count all, but including syms
+=end
 	def count
-		if @opts.values_at(:files, :dirs, :syms).all? or @opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
+		if @opts.values_at(:files, :dirs).all? or @opts.values_at(:files, :dirs, :syms).all? or @opts.values_at(:files, :dirs, :syms).none?
 			all_count(@path)
+		elsif @opts.values_at(:syms, :dirs).all? or @opts[:dirs]
+			dir_count(@path)
 		elsif @opts[:files]
 			fil_count(@path)
-		elsif @opts[:dirs]
-			dir_count(@path)
 		elsif @opts[:syms]
 			sym_count(@path)
 		end

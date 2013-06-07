@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-# Bundler Boilerplate
-require 'bundler/setup'
 require_relative '../lib/ct'
 require 'trollop'
 

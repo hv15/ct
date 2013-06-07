@@ -7,6 +7,7 @@ require 'ct'
 Gem::Specification.new do |s|
 	s.name		= 'ct'
 	s.version	= Ct::VERSION
+	s.add_dependency('trollop')
 	s.date		= '2013-06-06'
 	s.summary	= 'A quick way to count files'
 	s.license	= 'GPL-3'
