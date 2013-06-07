@@ -21,7 +21,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'trollop'
 
-VERSION = 0.5-3
+VERSION = '0.5.3'
 
 def all_count(path)
 	list = Dir.entries(path) - [".",".."]
