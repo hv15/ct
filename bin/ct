@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# Bundler Boilerplate
+require 'rubygems'
+require 'bundler/setup'
+require_relative '../lib/ct'
+require 'trollop'
+
+def count(path)
+	if $opts.values_at(:files, :dirs, :syms).all? or $opts.values_at(:files, :dirs, :syms).all?{|opt| !opt}
+		Ct.all_count(path)
+	elsif $opts[:files]
+		Ct.fil_count(path)
+	elsif $opts[:dirs]
+		Ct.dir_count(path)
+	elsif $opts[:syms]
+		Ct.sym_count(path)
+	else
+		puts "No Match"
+		exit 95
+	end
+end
+
+$opts = Trollop::options do
+	version "ct #{Ct::VERSION} (c) 2013 Hans-Nikolai Viessmann"
+	text <<-EOF
+ct Copyright (c) 2013 Hans-Nikolai Viessmann
+This program comes with ABSOLUTELY NO WARRANTY!
+
+Usage: ct [OPTIONS] ... DIR
+
+DESCRIPTION: Count the number of files and directories within DIR
+
+OPTIONS:
+EOF
+	opt :files, "Return only file count" 
+	opt :dirs, "Return only directory count"
+	opt :syms, "Return only symbolic link count"
+	opt :recursive, "Recursively count"
+	opt :verbose, "Show more detail"
+end
+
+if ARGV.length != 1
+	puts "No arguments given. Try '--help' for options."
+	exit 125
+end
+
+path = ARGV.shift
+
+if not File.directory?(path)
+	puts "Invalid path given -- #{path}"
+	exit 100
+end
+
+path = File.absolute_path(path)
+
+puts count(path) if __FILE__ == $0
