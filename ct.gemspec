@@ -7,10 +7,10 @@ require 'ct'
 Gem::Specification.new do |s|
 	s.name		= 'ct'
 	s.version	= Ct::VERSION
-	s.add_dependency('trollop')
+    s.add_runtime_dependency 'trollop', ' ~> 2.0', '>= 2.0'
 	s.date		= '2013-06-06'
 	s.summary	= 'A quick way to count files'
-	s.license	= 'GPL-3'
+    s.license	= 'GPL-3.0'
 	s.platform	= Gem::Platform::RUBY
 	s.description	= 'A command-line tool to count the number of file and/or diretories in a given directory'
 	s.authors	= ['Hans-Nikolai Viessmann']
